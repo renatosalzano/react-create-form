@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #003366;
+  --color-primary-light: #3C62A7;
+  --color-disabled: #AFABAB;
+  --color-primary-card: #197dff3b;
+}
+
+@layer base {
+
+    button {
+        @apply bg-gray-500 text-white p-2;
+    }
+
+    input {
+        border: 1px solid black;
+    }
+}

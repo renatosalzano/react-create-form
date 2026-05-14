@@ -1,0 +1,222 @@
+@reference '/src/index.css';
+
+@layer base {
+
+    .field-label {
+
+        &.color--error {
+            @apply text-red-500;
+        }
+
+        font-family: Arial, sans-serif;
+        @apply flex pl-2 pt-1 text-primary box-border;
+    }
+
+    .input {
+
+        --input-h: 26px;
+        --input-w: unset;
+        --border-color: var(--color-primary);
+
+        --label-flex: 0;
+        --label-max-w: unset;
+        --label-font-s: 14px;
+
+        .field-label {
+            font-size: var(--label-font-s);
+        }
+
+        /* @apply flex flex-col gap-2 */
+        .input__control {
+            height: var(--input-h);
+            max-width: var(--input-w);
+            border: 1px solid var(--border-color);
+            @apply flex-1 box-border min-w-0;
+        }
+
+        &.color--error {
+            --border-color: var(--color-red-500);
+        }
+
+        @apply flex-1 flex gap-2 overflow-hidden;
+    }
+
+    .input--flat {
+        --label-flex: 1;
+        --label-max-w: 150px;
+    }
+
+    .input--xs {
+        --input-w: 100px;
+        --label-flex: 0;
+        --label-max-w: unset;
+    }
+
+    .input--sm {
+        --label-font-s: 13px;
+        --input-h: 20px;
+    }
+
+    .input--default {
+        flex-direction: column;
+
+        .input__control {
+            flex: unset;
+        }
+    }
+
+
+    .textarea {
+
+        --resize: vertical;
+
+        &.textfield--default {
+            @apply flex-col;
+        }
+
+        /* @apply flex flex-col gap-2 */
+        .textarea__input {
+            resize: var(--resize);
+            @apply flex-1 min-w-0;
+        }
+
+        @apply flex gap-2 overflow-hidden;
+    }
+
+    .textarea--resize-none {
+        --resize: none;
+    }
+
+    .select {
+
+        &.select--default {
+            @apply flex-col;
+        }
+
+        /* @apply flex flex-col gap-2 */
+        .select__input {
+            /* -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none; */
+            padding: 1px 2px;
+            @apply min-w-0;
+        }
+
+        &.color--error {
+            .textfield__input {
+                @apply border-red-500;
+            }
+        }
+
+        @apply flex-1 flex gap-2 overflow-hidden;
+    }
+
+
+    .checkbox {
+
+        --checkbox-size: 20px;
+        --label-gap: 8px;
+        --label-font-size: 16px;
+
+        .field-label {
+
+            font-size: var(--label-font-size);
+            gap: var(--label-gap);
+
+            .checkbox__input {
+                height: var(--checkbox-size);
+                width: var(--checkbox-size);
+            }
+            @apply flex items-center;
+        }
+        
+        /* @apply py-2; */
+    }
+
+    .checkbox--xs {
+        --checkbox-size: 14px;
+        --label-font-size: 13px;
+        --label-gap: 4px;
+    }
+
+    .checkbox--sm {
+        --checkbox-size: 18px;
+        --label-font-size: 14px;
+    }
+    
+
+    .button {
+        --button-size: 50px;
+        --button-padding: 8px;
+
+        --button-bg: var(--color-primary);
+        --button-bg-hover: var(--color-primary-light);
+        --button-color: #fff;
+
+        min-width: 50px;
+        height: var(--button-size);
+        padding: var(--button-padding);
+        border: none;
+        border-radius: 4px;
+
+        color: var(--button-color);
+        background-color: var(--button-bg);
+
+        @apply flex items-center gap-2 cursor-pointer box-border;
+    }
+
+    .button:hover, .button:focus-visible {
+        background-color: var(--button-bg-hover);
+    }
+
+    .button--ghost {
+        color: var(--button-bg);
+        background-color: transparent;
+
+        &:hover {
+            background-color: transparent;
+        }
+    }
+
+    .button--icon {
+        width: var(--button-size);
+        min-width: var(--button-size);
+        height: var(--button-size);
+        border-radius: var(--button-size);
+        svg {
+            width: 100%;
+            height: 100%;
+        }
+    }
+
+
+    .button--error {
+
+    }
+
+    .button--disabled {
+        @apply bg-disabled pointer-events-none;
+    }
+
+   
+
+    .button--xs {
+        --button-size: 28px;
+        --button-padding: 4px;
+    }
+
+    .button--sm {
+        --button-size: 36px;
+    }
+
+    .button--md {
+        --button-size: 46px;
+        --button-padding: 10px;
+    }
+
+    
+
+    
+
+    
+}
