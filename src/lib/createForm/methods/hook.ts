@@ -1,12 +1,12 @@
 import { useLayoutEffect, useMemo, useState } from "react";
-import type { FormControl } from "..";
+import type { FormControl } from "../createForm";
 
 
 type SuggestKeys<T> = keyof T | (string & {});
 type Values<T> = { [K in SuggestKeys<T>]: K extends keyof T ? T[K] : string };
 
 
-export const _hookMethods = <S, Types>(api: FormControl) => {
+export const _hookMethods = <S>(api: FormControl) => {
 
 
     const useValues = <

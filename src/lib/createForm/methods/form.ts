@@ -13,15 +13,7 @@ const isField = (field: any): field is Field<any> => {
     return false
 }
 
-type Schema<T extends Record<string, FieldTypes> = Record<string, FieldTypes>> = { [K in keyof T]: FieldSchema<T[K], T> }
 
-type Override<
-    T = {},
-    S = Schema
-> = { [K in keyof Omit<S, keyof T>]?: S[K] }
-
-
-type SuggestKeys<T> = keyof T | (string & {});
 
 type Init<
     T = {}
@@ -34,12 +26,7 @@ type Field<T> = (FieldProps & {
 }) | T
 
 
-interface Register<
-    T extends Record<string, FieldTypes> = Record<string, FieldTypes>,
-> {
-    (id: string, schema: FieldSchema): void
-    (schema: { [id: string]: FieldSchema }): void
-}
+
 
 
 export const _formMethods = <S, V>(api: FormControl) => {
@@ -66,8 +53,8 @@ export const _formMethods = <S, V>(api: FormControl) => {
 
 
 
-    const register: Register = (...args: []) => {
-
+    const register = <T extends FieldTypes>(id: string, config: FieldSchema<V, T>) => {
+        api.register(id, config as any)
     }
 
     const disabled = (disabled = false) => {

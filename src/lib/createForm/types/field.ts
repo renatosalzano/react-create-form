@@ -7,8 +7,8 @@ type FieldType<T> = T extends FieldTypes ? ReturnType<T> : T
 
 
 export type FieldSchema<
+    V = {},
     T extends FieldTypes = FieldTypes,
-    V = {}
 > = {
     type: T
     value?: FieldType<T>

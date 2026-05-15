@@ -32,13 +32,3 @@ export const extendApi: ExtendApiMiddleware = (config, apiExtended) => (set, get
 };
 
 
-const test = create(
-    extendApi(
-        (s, g) => ({}),
-        {
-            get() {
-                this.setState()
-            }
-        }
-    )
-)

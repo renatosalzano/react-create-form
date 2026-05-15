@@ -14,7 +14,7 @@ const $ERRORS: unique symbol = Symbol('errors')
 const $VALID: unique symbol = Symbol('valid')
 const $VALUES: unique symbol = Symbol('values')
 const $FIELD_DEPS: unique symbol = Symbol('field_deps')
-const $INITIALIZED: unique symbol = Symbol('initialized')
+// const $INITIALIZED: unique symbol = Symbol('initialized')
 
 
 type Rec = Record<string, any>
@@ -48,70 +48,47 @@ type FormStateUpdate = {
 
 
 
-interface GetSchema {
-    (id: string): FieldSchema
-    (): Record<string, FieldSchema>
-}
+// interface GetSchema {
+//     (id: string): FieldSchema
+//     (): Record<string, FieldSchema>
+// }
 
-interface SetField {
-    (id: string, partial: Partial<FieldState>): void
-    (id: string, partial: (prev: FieldState) => FieldState): void
-}
+// interface SetField {
+//     (id: string, partial: Partial<FieldState>): void
+//     (id: string, partial: (prev: FieldState) => FieldState): void
+// }
 
-type Watch = <T>(to: 'values' | 'valid' | 'errors' | 'has_errors', callback: (state: T, prevState: T) => void) => () => void
+// type Watch = <T>(to: 'values' | 'valid' | 'errors' | 'has_errors', callback: (state: T, prevState: T) => void) => () => void
 
 type RuleTest = Record<string, 'pass' | 'failed'>
-type ApplyRules = (field: FieldState, value?: any) => [FieldState, RuleTest]
-type CleanDeps = (id: string) => () => void
 
-type FormApi = {
-    get: () => Rec;
-    set: (id: string, value: any) => void;
-    reset: () => void
-    setField: SetField
-    getField: (id: string) => FieldState | undefined;
-    getSchema: GetSchema
-    applyRules: ApplyRules
-    setState: (update: FormStateUpdate, replace?: boolean) => void;
-    getState: () => void;
-    getFormState: () => FormStateMap
-    register: (id: string, config: FieldSchema) => void
-    cleanDeps: CleanDeps
-    getDeps(id: string): Set<string> | void
-    watch: Watch
-    map: (fn: (field: FieldState & { id: string }) => Partial<FieldState>) => void
-}
 
-export type FormControl = FormApi & {
-    (selector?: (state: Record<string, FieldState>) => void): FieldState,
-}
-
-type Schema<T extends Record<string, FieldTypes>> = { [K in keyof T]: FieldSchema<T[K], T> }
+type Schema<T extends Record<string, FieldTypes>> = { [K in keyof T]: FieldSchema<T, T[K]> }
 
 type Values<T extends Record<string, FieldTypes>> = { [K in keyof T]: ReturnType<T[K]> }
-// type LooseKeys<T> = keyof T | (string & {})
+
+type Setter<T> = (partial: T | Partial<T> | ((state: T) => T | Partial<T>), replace?: boolean) => void
+type Getter<T> = () => T
 
 
 
-class StoreMethods<
-    T extends FormState,
-    S extends (partial: FormState | Partial<FormState> | ((state: FormState) => FormState | Partial<FormState>), replace?: boolean) => void,
-    G extends () => T
-> {
+class StoreMethods {
 
     constructor(
-        private _set: S,
-        private _get: G,
+        private _set: Setter<FormState>,
+        private _get: Getter<FormState>,
         private _api: any,
         private _defaultState: any
     ) {
-        // Autodiscovery: prende tutti i metodi definiti nella classe 
-        // e li inietta nell'API di Zustand automaticamente.
+
         const prototype = Object.getPrototypeOf(this);
         const methodNames = Object.getOwnPropertyNames(prototype);
 
         for (const key of methodNames) {
-            if (key !== 'constructor' && !(key.startsWith('_')) && typeof (this as any)[key] === 'function') {
+            if (key === 'constructor') continue
+            if (key.startsWith('_')) continue
+
+            if (typeof (this as any)[key] === 'function') {
                 this._api[key] = (this as any)[key].bind(this);
             }
         }
@@ -188,7 +165,7 @@ class StoreMethods<
 
     setField(id: string, update: any, track?: Set<string>) {
 
-        track = track || new Set()
+        track = track || new Set<string>()
         track.add(id)
 
         const fieldSchema = this.getSchema(id);
@@ -262,7 +239,7 @@ class StoreMethods<
         this.setField(id, { value });
     }
 
-    register(id: string, config: FieldSchema) {
+    register(id: string, config?: FieldSchema) {
 
         if (!config) {
             console.error(`[createForm] - ${id} is not registered`)
@@ -314,7 +291,6 @@ class StoreMethods<
     }
 
     setState(update: FormStateUpdate, replace?: boolean) {
-        // @ts-ignore
         this._set({
             [$VALID]: update.valid ?? false,
             [$ERRORS]: update.errors ?? null,
@@ -327,7 +303,6 @@ class StoreMethods<
     }
 
     reset() {
-
         this._set(this._defaultState, true)
     }
 
@@ -388,7 +363,10 @@ class StoreMethods<
         }
     }
 
-    watch(to: 'values' | 'valid' | 'errors' | 'has_errors', callback: any) {
+    watch(
+        to: 'values' | 'valid' | 'errors' | 'has_errors',
+        callback: (state: any, prevState: any) => void
+    ) {
         const symbolMap = {
             valid: $VALID,
             values: $VALUES,
@@ -423,6 +401,15 @@ class StoreMethods<
 }
 
 
+
+type StoreApi = { [K in keyof StoreMethods]:
+    K extends `_${string}` ? unknown : StoreMethods[K]
+}
+
+
+export type FormControl = StoreApi & {
+    (selector?: (state: Record<string, FieldState>) => void): FieldState,
+}
 
 export const createForm = <S extends Record<string, FieldTypes>>(
     schema?: Schema<S>
@@ -467,7 +454,7 @@ export const createForm = <S extends Record<string, FieldTypes>>(
     const methods = new Proxy(
         Object.assign(
             _formMethods<Schema<S>, Values<S>>(formState),
-            _hookMethods<{ [K in keyof S]: ReturnType<S[K]> }, S>(formState),
+            _hookMethods<{ [K in keyof S]: ReturnType<S[K]> }>(formState),
             _validationMethods(formState),
             _fieldMethods<Values<S>>(formState)
         ),

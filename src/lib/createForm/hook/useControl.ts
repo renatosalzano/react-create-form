@@ -127,7 +127,7 @@ export const useControl = (props: ControlProps) => {
 
 
     return {
-        type: schema.type,
+        type: schema?.type,
         touched: field.touched,
         messages: field.message,
         render: render,

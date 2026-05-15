@@ -1,6 +1,5 @@
-import type { FieldTypes } from "../config";
 import type { FormControl } from "../createForm";
-import type { FieldProps, FieldSchema, FieldState } from "../types/field";
+import type { FieldProps } from "../types/field";
 
 
 
