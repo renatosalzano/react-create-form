@@ -26,7 +26,7 @@ export type Rule<
     value: T | null | undefined,
     deps: { [K in keyof V]: FieldType<V[K]> }
 ) => boolean | {
-    error: boolean
+    error?: boolean
     message?: string
     disabled?: boolean
     readonly?: boolean

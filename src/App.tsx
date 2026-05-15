@@ -17,7 +17,7 @@ const form = createForm({
         },
         disabled: true
     },
-    b: { type: Number },
+    b: { type: Number, value: 0 },
     Bool: { type: Boolean },
     Check: { type: String }
 })

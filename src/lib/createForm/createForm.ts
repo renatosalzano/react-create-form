@@ -87,7 +87,6 @@ class StoreMethods {
         for (const key of methodNames) {
             if (key === 'constructor') continue
             if (key.startsWith('_')) continue
-
             if (typeof (this as any)[key] === 'function') {
                 this._api[key] = (this as any)[key].bind(this);
             }
