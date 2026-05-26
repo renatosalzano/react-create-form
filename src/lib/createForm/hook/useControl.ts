@@ -80,9 +80,12 @@ export const useControl = (props: ControlProps) => {
         let value = evt
 
         if (isInputEvent(evt)) {
+
             value = evt.target.value
 
             if (evt.target.type === 'checkbox') {
+
+                // debugger
 
                 const hasValue = !['true', 'false'].includes(evt.target.value)
 
@@ -93,7 +96,13 @@ export const useControl = (props: ControlProps) => {
                 }
             }
 
+            if (evt.target.type === 'date') {
+                //
+            }
+
             value = typeApi.convert(value)
+            // console.log(id, value)
+
         } else {
 
             if (!typeApi.checkValue(value)) {
@@ -135,6 +144,7 @@ export const useControl = (props: ControlProps) => {
             id,
             value: field.value,
             error: field.touched && field.error,
+            required: field.required,
             disabled: field.disabled,
             readOnly: field.readonly,
             onChange

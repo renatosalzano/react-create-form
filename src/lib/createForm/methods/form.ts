@@ -5,7 +5,7 @@ import type { FieldProps, FieldSchema } from "../types/field";
 
 const isField = (field: any): field is Field<any> => {
 
-    if (typeof field === 'object') {
+    if (typeof field === 'object' && field !== null) {
         if ("value" in field || "required" in field || "disabled" in field || "readonly" in field || "error" in field) {
             return true
         }
@@ -34,21 +34,27 @@ export const _formMethods = <S, V>(api: FormControl) => {
 
     const init: Init<V> = (fields) => {
 
+        // console.log('init')
+
         api.reset()
 
         api.map(field => {
 
             if (field.id in fields) {
+
                 const update = fields[field.id as keyof V]
                 if (isField(update)) {
                     field = { ...field, ...update }
                 } else {
                     field.value = update
                 }
+
+                field.touched = false
+                field.error = false
             }
 
             return field
-        })
+        }, true)
     }
 
 

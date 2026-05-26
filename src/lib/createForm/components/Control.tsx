@@ -1,9 +1,10 @@
 import type { FC, ReactNode } from "react"
 import { useControl } from "../hook/useControl"
-import type { FormControl } from ".."
+import type { FormControl } from "../createForm"
 import type { FieldProps, FieldSchema, FieldState } from "../types/field"
 
-type Props = {
+
+export type ControlProps = {
     id: string
     control?: FormControl
     register?: FieldSchema
@@ -18,7 +19,7 @@ type InputProps = {
     onChange(evt: any): void
 }
 
-export const Control: FC<Props> = ({
+export const Control: FC<ControlProps> = ({
     id,
     control,
     register,

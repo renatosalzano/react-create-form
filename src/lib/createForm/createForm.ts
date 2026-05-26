@@ -6,6 +6,7 @@ import { _formMethods } from "./methods/form";
 import { _hookMethods } from "./methods/hook";
 import { _validationMethods } from "./methods/validation";
 import { _fieldMethods } from "./methods/field";
+import { clone, cloneAndFreeze } from "./utils/clone";
 
 
 const $SCHEMA: unique symbol = Symbol('schema')
@@ -47,19 +48,6 @@ type FormStateUpdate = {
 }
 
 
-
-// interface GetSchema {
-//     (id: string): FieldSchema
-//     (): Record<string, FieldSchema>
-// }
-
-// interface SetField {
-//     (id: string, partial: Partial<FieldState>): void
-//     (id: string, partial: (prev: FieldState) => FieldState): void
-// }
-
-// type Watch = <T>(to: 'values' | 'valid' | 'errors' | 'has_errors', callback: (state: T, prevState: T) => void) => () => void
-
 type RuleTest = Record<string, 'pass' | 'failed'>
 
 
@@ -74,12 +62,17 @@ type Getter<T> = () => T
 
 class StoreMethods {
 
+
+    private _initialState: FormState
+
     constructor(
         private _set: Setter<FormState>,
         private _get: Getter<FormState>,
         private _api: any,
-        private _defaultState: any
+        private _state?: FormState
     ) {
+
+        this._initialState = cloneAndFreeze(this._state!)
 
         const prototype = Object.getPrototypeOf(this);
         const methodNames = Object.getOwnPropertyNames(prototype);
@@ -115,10 +108,12 @@ class StoreMethods {
         let message: string[] = [];
         let ruleTest: Record<string, 'pass' | 'failed'> = {};
 
-        nextState.error = false;
-        nextState.disabled = false
+        let hasError = false;
+        let shouldDisable = false;
+        const accumulatedProps = {};
 
         if (rules) {
+
             for (const [name, rule] of Object.entries(rules)) {
 
                 const ret = rule(update.value, this._interceptDeps(id));
@@ -127,27 +122,30 @@ class StoreMethods {
 
                     if (ret.message) message.push(ret.message);
 
-                    nextState = {
-                        ...nextState,
-                        ...ret as any,
-                        disabled: nextState.disabled || ret?.disabled,
-                        error: nextState.error || ret?.error
-                    };
+                    Object.assign(accumulatedProps, ret)
+
+                    if (ret.error !== undefined) hasError = hasError || ret.error;
+                    if (ret.disabled !== undefined) shouldDisable = shouldDisable || ret.disabled;
 
                     ruleTest[name] = ret.error ? 'failed' : 'pass';
                 } else {
                     const valid = ret;
-                    nextState.error = nextState.error || !valid;
+                    hasError = !valid
+                    nextState.error = hasError || !valid;
                     ruleTest[name] = valid ? 'pass' : 'failed';
                 }
             }
         }
 
+        nextState = { ...nextState, ...accumulatedProps }
+
         if (nextState.required) {
 
             const ret = required(type, update.value);
 
-            nextState.error = nextState.error || ret.error;
+            // console.log(id, ret, ruleTest)
+
+            nextState.error = hasError || ret.error;
 
             if (ret.message) message.push(ret.message);
             ruleTest.required = ret.error ? 'failed' : 'pass';
@@ -188,6 +186,15 @@ class StoreMethods {
             update = { ...field, ...update };
         }
 
+        if ("value" in update) {
+            const isValid = typesApi.checkValue(update.value)
+            if (!isValid) {
+                // se il valore in ingresso non e del tipo previsto viene settato al valore iniziale
+                console.warn('[createForm]', id, 'invalid value', update.value)
+                update.value = typesApi.initValue()
+            }
+        }
+
         const [nextState, ruleTest] = this.applyRules(id, update as FieldState);
 
         const values = this._get()[$VALUES];
@@ -221,7 +228,7 @@ class StoreMethods {
 
         if (deps) {
             for (const dep of deps) {
-
+                // avoid infinite recursion loop
                 if (!track.has(dep)) {
                     this.setField(dep, {}, track);
                 }
@@ -302,7 +309,7 @@ class StoreMethods {
     }
 
     reset() {
-        this._set(this._defaultState, true)
+        this._set(() => clone(this._initialState))
     }
 
     getDeps(id: string) {
@@ -378,14 +385,27 @@ class StoreMethods {
         return this._api.subscribe((state: any) => state[key], callback);
     }
 
-    map(fn: (field: FieldState & { id: string }) => Partial<FieldState>) {
+    map(fn: (field: FieldState & { id: string }) => Partial<FieldState>, pre_register?: boolean) {
 
-        for (const id of Object.keys(this.getSchema())) {
+        // console.log('map called')
+        const schema = this.getSchema()
+
+        for (const id of Object.keys(schema)) {
 
             const currState = Object.assign(this.getField(id) ?? {}, { id });
             const ret = fn(currState) as FieldState & { id: string };
             const { id: _, ...nextState } = ret;
+
+            if (pre_register) {
+                // keep init values
+                this.register(id, {
+                    ...schema[id],
+                    value: nextState.value
+                })
+            }
+
             this.setField(id, nextState);
+            // console.log(id, nextState)
         }
     }
 
@@ -414,6 +434,7 @@ export const createForm = <S extends Record<string, FieldTypes>>(
     schema?: Schema<S>
 ) => {
 
+
     const formState = create(subscribeWithSelector<FormState>((_set, _get, _api) => {
 
         const state: FormState = {
@@ -441,7 +462,7 @@ export const createForm = <S extends Record<string, FieldTypes>>(
             // console.log('initial data', state)
         }
 
-        new StoreMethods(_set as any, _get, _api, state)
+        new StoreMethods(_set as any, _get, _api, state as any)
 
         return state
     })) as unknown as FormControl

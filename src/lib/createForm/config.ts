@@ -1,10 +1,11 @@
+import { is } from "./utils/is"
 
 
 const Types = [
     [String, {
         initValue: (value: any = "") => value,
         checkValue: (value: any) => typeof value === "string",
-        convert: (value: any) => String(value)
+        convert: (value: any) => is.undefined(value) ? "" : value
     }],
     [Number, {
         initValue: (value: any = "") => value,
@@ -22,15 +23,14 @@ const Types = [
     [Boolean, {
         initValue: (value: any = false) => value,
         checkValue: (value: any) => typeof value === "boolean",
-        convert: (value: any) => (console.log(value), !!value)
+        convert: (value: any) => !!value
     }],
     [Date, {
         initValue: (value: any = "") => value,
         checkValue: (value: any) => {
-            if (value) {
-                return !isNaN(new Date(value).getTime())
-            }
-            return true
+            if (is.undefined(value)) return false
+            const valid = !isNaN(new Date(value).getTime())
+            return valid
         },
         convert: (value: any) => String(value)
     }]
